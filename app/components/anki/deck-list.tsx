@@ -17,7 +17,6 @@ import {
 import { Loader2, BookOpen } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { safeUrlEncode } from "~/lib/utils";
 
 export function DeckList() {
   const { data: decks, isLoading, error } = useAllDeckStats();
@@ -45,66 +44,74 @@ export function DeckList() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {decks.map((deck) => (
-        <Card key={deck.name} className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">{deck.name}</CardTitle>
-            <CardDescription>
-              共 {deck.total_in_deck} 张卡片
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pb-2">
-            <div className="flex gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="secondary">{deck.new_count} 新卡</Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>新卡片</TooltipContent>
-                </Tooltip>
+      {decks.map((deck) => {
+        // 确保所有必要属性都存在，如果不存在则提供默认值
+        const new_count = deck.new_count ?? 0;
+        const learn_count = deck.learn_count ?? 0;
+        const review_count = deck.review_count ?? 0;
+        const total_in_deck = deck.total_in_deck ?? 0;
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline">{deck.learn_count} 学习中</Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>学习中的卡片</TooltipContent>
-                </Tooltip>
+        return (
+          <Card key={deck.name} className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">{deck.name}</CardTitle>
+              <CardDescription>
+                共 {total_in_deck} 张卡片
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-2">
+              <div className="flex gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="secondary">{new_count} 新卡</Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>新卡片</TooltipContent>
+                  </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge>{deck.review_count} 待复习</Badge>
-                  </TooltipTrigger>
-                  <TooltipContent>需要复习的卡片</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <div className="flex justify-between w-full">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-              >
-                <Link to={`/decks/${safeUrlEncode(deck.name)}`}>
-                  查看
-                </Link>
-              </Button>
-              {(deck.new_count > 0 || deck.learn_count > 0 || deck.review_count > 0) && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline">{learn_count} 学习中</Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>学习中的卡片</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge>{review_count} 待复习</Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>需要复习的卡片</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <div className="flex justify-between w-full">
                 <Button
+                  variant="outline"
                   size="sm"
                   asChild
                 >
-                  <Link to={`/decks/${safeUrlEncode(deck.name)}/review`}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    学习
+                  <Link to={`/decks/${deck.deck_id}`}>
+                    查看
                   </Link>
                 </Button>
-              )}
-            </div>
-          </CardFooter>
-        </Card>
-      ))}
+                {(new_count > 0 || learn_count > 0 || review_count > 0) && (
+                  <Button
+                    size="sm"
+                    asChild
+                  >
+                    <Link to={`/decks/${deck.deck_id}/review`}>
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      学习
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </CardFooter>
+          </Card>
+        );
+      })}
     </div>
   );
 }

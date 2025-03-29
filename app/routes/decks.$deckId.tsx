@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
@@ -15,33 +15,45 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
 import { Input } from "~/components/ui/input";
-import { useCardsByQuery, useCardsInfo, useDeleteDeck } from "~/lib/hooks/useAnkiConnect";
+import { useCardsByQuery, useCardsInfo, useDeleteDeck, useDeckNamesAndIds } from "~/lib/hooks/useAnkiConnect";
 import { BookOpen, Plus, Trash2, Pencil, Loader2 } from "lucide-react";
 import { Loading } from "~/components/ui/loading";
 import { ErrorDisplay } from "~/components/ui/error-display";
 import { DataTable } from "~/components/ui/data-table";
 import { CardInfo } from "~/lib/anki-connect/cards";
 import { useToast } from "~/hooks/use-toast";
-import { safeUrlEncode } from "~/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  if (!params.deckName) {
-    throw new Response("Deck name is required", { status: 404 });
+  if (!params.deckId) {
+    throw new Response("Deck ID is required", { status: 404 });
   }
-  return json({ deckName: params.deckName });
+  return json({ deckId: parseInt(params.deckId) });
 };
 
 export default function DeckDetail() {
-  const { deckName } = useParams();
+  const { deckId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const decodedDeckName = deckName ? decodeURIComponent(deckName) : "";
   const [searchTerm, setSearchTerm] = useState("");
+  const numericDeckId = deckId ? parseInt(deckId) : 0;
+  const [deckName, setDeckName] = useState<string | null>(null);
+
+  // 获取所有牌组ID和名称的映射
+  const { data: decksMap, isLoading: isLoadingDecks } = useDeckNamesAndIds();
+
+  // 根据deckId查找deckName
+  useEffect(() => {
+    if (decksMap && numericDeckId) {
+      const foundDeckName = Object.keys(decksMap).find(key => decksMap[key] === numericDeckId);
+      setDeckName(foundDeckName || null);
+    }
+  }, [decksMap, numericDeckId]);
 
   const deleteDeckMutation = useDeleteDeck();
 
-  const query = `deck:"${decodedDeckName}" ${searchTerm}`.trim();
+  // 只有在获取到牌组名称后才执行查询
+  const query = deckName ? `deck:"${deckName}" ${searchTerm}`.trim() : "";
   const {
     data: cardIds,
     isLoading: isLoadingCardIds,
@@ -56,15 +68,17 @@ export default function DeckDetail() {
     error: cardsInfoError,
   } = useCardsInfo(cardIds || []);
 
-  const isLoading = isLoadingCardIds || isLoadingCardsInfo;
+  const isLoading = isLoadingDecks || isLoadingCardIds || isLoadingCardsInfo || !deckName;
   const error = cardIdsError || cardsInfoError;
 
   const handleDeleteDeck = async () => {
+    if (!deckName) return;
+
     try {
-      await deleteDeckMutation.mutateAsync(decodedDeckName);
+      await deleteDeckMutation.mutateAsync(deckName);
       toast({
         title: "牌组已删除",
-        description: `成功删除牌组 "${decodedDeckName}"`
+        description: `成功删除牌组 "${deckName}"`
       });
       navigate("/decks");
     } catch (error) {
@@ -116,19 +130,44 @@ export default function DeckDetail() {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <RootLayout>
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin mr-2" />
+          <span>加载牌组信息...</span>
+        </div>
+      </RootLayout>
+    );
+  }
+
+  if (!deckName) {
+    return (
+      <RootLayout>
+        <div className="p-8 text-center">
+          <h2 className="text-xl font-bold text-red-500">找不到牌组</h2>
+          <p className="mt-2 text-muted-foreground">无法找到ID为 {deckId} 的牌组</p>
+          <Button className="mt-4" asChild>
+            <Link to="/decks">返回牌组列表</Link>
+          </Button>
+        </div>
+      </RootLayout>
+    );
+  }
+
   return (
     <RootLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{decodedDeckName}</h1>
+          <h1 className="text-2xl font-bold">{deckName}</h1>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline">
-              <Link to={`/decks/${safeUrlEncode(decodedDeckName)}/add`}>
+              <Link to={`/decks/${numericDeckId}/add`}>
                 <Plus className="mr-2 h-4 w-4" />添加卡片
               </Link>
             </Button>
             <Button asChild>
-              <Link to={`/decks/${safeUrlEncode(decodedDeckName)}/review`}>
+              <Link to={`/decks/${numericDeckId}/review`}>
                 <BookOpen className="mr-2 h-4 w-4" />开始学习
               </Link>
             </Button>
@@ -153,7 +192,7 @@ export default function DeckDetail() {
                 />
               </CardHeader>
               <CardContent>
-                {isLoading ? (
+                {isLoadingCardIds || isLoadingCardsInfo ? (
                   <Loading text="加载卡片列表..." />
                 ) : error ? (
                   <ErrorDisplay
@@ -178,7 +217,7 @@ export default function DeckDetail() {
 
           <div>
             <div className="space-y-4">
-              <DeckStats deckName={decodedDeckName} />
+              <DeckStats deckName={deckName} />
 
               <Card className="mt-2">
                 <CardHeader>
@@ -186,13 +225,13 @@ export default function DeckDetail() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button variant="outline" className="w-full justify-start" asChild>
-                    <Link to={`/decks/${safeUrlEncode(decodedDeckName)}/add`}>
+                    <Link to={`/decks/${numericDeckId}/add`}>
                       <Plus className="mr-2 h-4 w-4" />
                       添加卡片
                     </Link>
                   </Button>
                   <Button variant="outline" className="w-full justify-start" asChild>
-                    <Link to={`/decks/${safeUrlEncode(decodedDeckName)}/review`}>
+                    <Link to={`/decks/${numericDeckId}/review`}>
                       <BookOpen className="mr-2 h-4 w-4" />
                       开始学习
                     </Link>
@@ -211,7 +250,7 @@ export default function DeckDetail() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>确认删除牌组</AlertDialogTitle>
                         <AlertDialogDescription>
-                          您确定要删除 "{decodedDeckName}" 牌组吗？此操作无法撤销，所有卡片将一并被删除。
+                          您确定要删除 "{deckName}" 牌组吗？此操作无法撤销，所有卡片将一并被删除。
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -234,6 +273,6 @@ export default function DeckDetail() {
           </div>
         </div>
       </div>
-    </RootLayout>
+    </RootLayout >
   );
 }

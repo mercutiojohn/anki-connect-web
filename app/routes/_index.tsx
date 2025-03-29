@@ -118,7 +118,7 @@ export default function Index() {
                       </CardHeader>
                       <CardContent className="flex justify-end">
                         <Button asChild>
-                          <Link to={`/decks/${encodeURIComponent(deck.name)}/review`}>
+                          <Link to={`/decks/${deck.deck_id}/review`}>
                             开始学习
                           </Link>
                         </Button>

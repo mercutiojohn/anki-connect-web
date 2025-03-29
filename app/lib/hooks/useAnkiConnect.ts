@@ -25,7 +25,7 @@ export const queryKeys = {
     all: ["decks"],
     allWithIds: ["decks", "with-ids"],
     stats: ["decks", "stats"],
-    detail: (deckName: string) => ["decks", deckName],
+    detail: (deckId: number) => ["decks", "id", deckId],
   },
   cards: {
     all: ["cards"],
@@ -79,11 +79,11 @@ export function useDeckNamesAndIds() {
   });
 }
 
-export function useDeckStats(deckName: string) {
+export function useDeckStats(deckId: number) {
   return useQuery({
-    queryKey: queryKeys.decks.detail(deckName),
-    queryFn: () => getDeckStats(deckName),
-    enabled: !!deckName,
+    queryKey: queryKeys.decks.detail(deckId),
+    queryFn: () => getDeckStats(deckId),
+    enabled: !!deckId,
   });
 }
 

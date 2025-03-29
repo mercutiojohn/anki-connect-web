@@ -5,34 +5,47 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { RootLayout } from "~/components/layout/root-layout";
 import { ReviewCard } from "~/components/anki/review-card";
 import { Button } from "~/components/ui/button";
-import { useCardsByQuery } from "~/lib/hooks/useAnkiConnect";
+import { useCardsByQuery, useDeckNamesAndIds } from "~/lib/hooks/useAnkiConnect";
 import { ankiConnectInvoke } from "~/lib/anki-connect/api";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Progress } from "~/components/ui/progress";
 import { useToast } from "~/hooks/use-toast";
-import { safeUrlEncode } from "~/lib/utils";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  if (!params.deckName) {
-    throw new Response("Deck name is required", { status: 404 });
+  if (!params.deckId) {
+    throw new Response("Deck ID is required", { status: 404 });
   }
-  return json({ deckName: params.deckName });
+  return json({ deckId: parseInt(params.deckId) });
 };
 
 export default function ReviewDeck() {
-  const { deckName } = useParams();
+  const { deckId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const decodedDeckName = deckName ? decodeURIComponent(deckName) : "";
+  const numericDeckId = deckId ? parseInt(deckId) : 0;
+  const [deckName, setDeckName] = useState<string | null>(null);
+
+  // 获取所有牌组ID和名称的映射
+  const { data: decksMap, isLoading: isLoadingDecks } = useDeckNamesAndIds();
+
+  // 根据deckId查找deckName
+  useEffect(() => {
+    if (decksMap && numericDeckId) {
+      const foundDeckName = Object.keys(decksMap).find(key => decksMap[key] === numericDeckId);
+      setDeckName(foundDeckName || null);
+    }
+  }, [decksMap, numericDeckId]);
 
   const [currentCardIdx, setCurrentCardIdx] = useState<number>(0);
   const [reviewedCount, setReviewedCount] = useState<number>(0);
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [isAnswering, setIsAnswering] = useState<boolean>(false);
 
-  // 获取待复习卡片
-  const query = `deck:"${decodedDeckName}" is:due`;
-  const { data: cardIds, isLoading, error } = useCardsByQuery(query);
+  // 只有在获取到牌组名称后才执行查询
+  const query = deckName ? `deck:"${deckName}" is:due` : "";
+  const { data: cardIds, isLoading: isLoadingCards, error } = useCardsByQuery(query);
+
+  const isLoading = isLoadingDecks || isLoadingCards || !deckName;
 
   useEffect(() => {
     if (cardIds && cardIds.length === 0) {
@@ -47,7 +60,6 @@ export default function ReviewDeck() {
 
     try {
       // 使用 AnkiConnect API 回答卡片
-      // 实际实现可能需要更复杂的逻辑，这里我们简化处理
       await ankiConnectInvoke("guiAnswerCard", { ease });
 
       // 更新状态
@@ -60,7 +72,7 @@ export default function ReviewDeck() {
         setIsFinished(true);
         toast({
           title: "复习完成",
-          description: `您已完成 ${decodedDeckName} 牌组的复习`,
+          description: `您已完成 ${deckName} 牌组的复习`,
         });
       }
     } catch (error) {
@@ -78,25 +90,47 @@ export default function ReviewDeck() {
     ? Math.round((reviewedCount / cardIds.length) * 100)
     : 0;
 
+  // 如果正在加载，显示加载状态
+  if (isLoading) {
+    return (
+      <RootLayout>
+        <div className="flex justify-center items-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin mr-2" />
+          <span>加载牌组信息...</span>
+        </div>
+      </RootLayout>
+    );
+  }
+
+  // 如果找不到牌组，显示错误信息
+  if (!deckName) {
+    return (
+      <RootLayout>
+        <div className="p-8 text-center">
+          <h2 className="text-xl font-bold text-red-500">找不到牌组</h2>
+          <p className="mt-2 text-muted-foreground">无法找到ID为 {deckId} 的牌组</p>
+          <Button className="mt-4" onClick={() => navigate("/decks")}>
+            返回牌组列表
+          </Button>
+        </div>
+      </RootLayout>
+    );
+  }
+
   return (
     <RootLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">复习 {decodedDeckName}</h1>
-          <Button variant="outline" onClick={() => navigate(`/decks/${safeUrlEncode(decodedDeckName)}`)}>
+          <h1 className="text-2xl font-bold">复习 {deckName}</h1>
+          <Button variant="outline" onClick={() => navigate(`/decks/${numericDeckId}`)}>
             <ArrowLeft className="mr-2 h-4 w-4" /> 返回牌组
           </Button>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin mr-2" />
-            <span>加载卡片中...</span>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="p-6 text-center">
             <p className="text-red-500 mb-4">加载卡片失败: {error instanceof Error ? error.message : String(error)}</p>
-            <Button onClick={() => navigate(`/decks/${safeUrlEncode(decodedDeckName)}`)}>返回牌组</Button>
+            <Button onClick={() => navigate(`/decks/${numericDeckId}`)}>返回牌组</Button>
           </div>
         ) : isFinished || !cardIds || cardIds.length === 0 ? (
           <div className="text-center py-12">
@@ -108,7 +142,7 @@ export default function ReviewDeck() {
                 ? `您已经复习了 ${reviewedCount} 张卡片`
                 : "该牌组中没有需要复习的卡片"}
             </p>
-            <Button onClick={() => navigate(`/decks/${safeUrlEncode(decodedDeckName)}`)}>
+            <Button onClick={() => navigate(`/decks/${numericDeckId}`)}>
               返回牌组
             </Button>
           </div>

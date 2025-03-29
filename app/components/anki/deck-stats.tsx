@@ -1,15 +1,28 @@
-import { useDeckStats } from "~/lib/hooks/useAnkiConnect";
+import { useDeckStats, useDeckNamesAndIds } from "~/lib/hooks/useAnkiConnect";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Progress } from "~/components/ui/progress";
 import { Separator } from "~/components/ui/separator";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface DeckStatsProps {
   deckName: string;
 }
 
 export function DeckStats({ deckName }: DeckStatsProps) {
-  const { data: deckStats, isLoading, error } = useDeckStats(deckName);
+  const [deckId, setDeckId] = useState<number | null>(null);
+  const { data: decksMap, isLoading: isLoadingMap } = useDeckNamesAndIds();
+
+  // 根据deckName获取deckId
+  useEffect(() => {
+    if (decksMap && deckName) {
+      setDeckId(decksMap[deckName] || null);
+    }
+  }, [decksMap, deckName]);
+
+  const { data: deckStats, isLoading: isLoadingStats, error } = useDeckStats(deckId || 0);
+
+  const isLoading = isLoadingMap || isLoadingStats || !deckId;
 
   if (isLoading) {
     return (

@@ -66,11 +66,11 @@ export function Sidebar() {
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span className="text-sm text-muted-foreground">加载中...</span>
                     </div>
-                  ) : deckNames && deckNames.length > 0 ? (
-                    deckNames.map((name) => (
+                  ) : deckNamesAndIds && Object.keys(deckNamesAndIds).length > 0 ? (
+                    Object.entries(deckNamesAndIds).map(([name, id]) => (
                       <NavLink
-                        key={name}
-                        to={`/decks/${encodeURIComponent(name)}`}
+                        key={id}
+                        to={`/decks/${id}`}
                         className={({ isActive }) =>
                           `block text-sm px-3 py-1.5 rounded-md ${isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"}`
                         }
