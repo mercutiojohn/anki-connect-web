@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient, QueryKey } from "@tanstack/react-query";
 import { testConnection, getVersion } from "../anki-connect/api";
 import {
-  getDeckNames, getDeckStats, getAllDeckStats,
+  getDeckNames, getDeckStats, getAllDeckStats, getDeckNamesAndIds,
   createDeck, deleteDeck, DeckStats
 } from "../anki-connect/decks";
 import {
@@ -23,6 +23,7 @@ export const queryKeys = {
   version: ["anki-version"],
   decks: {
     all: ["decks"],
+    allWithIds: ["decks", "with-ids"],
     stats: ["decks", "stats"],
     detail: (deckName: string) => ["decks", deckName],
   },
@@ -66,6 +67,14 @@ export function useDeckNames() {
   return useQuery({
     queryKey: queryKeys.decks.all,
     queryFn: getDeckNames,
+    staleTime: 30000, // 30秒内不重新请求
+  });
+}
+
+export function useDeckNamesAndIds() {
+  return useQuery({
+    queryKey: queryKeys.decks.allWithIds,
+    queryFn: getDeckNamesAndIds,
     staleTime: 30000, // 30秒内不重新请求
   });
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "@remix-run/react";
-import { useDeckNames } from "~/lib/hooks/useAnkiConnect";
+import { useDeckNamesAndIds } from "~/lib/hooks/useAnkiConnect";
 import {
   ChevronRight,
   ChevronDown,
@@ -18,7 +18,8 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const [showDecks, setShowDecks] = useState(true);
 
-  const { data: deckNames, isLoading } = useDeckNames();
+  const { data: deckNamesAndIds, isLoading } = useDeckNamesAndIds();
+  const deckNames = deckNamesAndIds ? Object.keys(deckNamesAndIds) : [];
 
   return (
     <aside className={`border-r bg-background ${isOpen ? "w-64" : "w-14"} transition-all duration-300`}>

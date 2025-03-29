@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useModelNames, useModelFieldNames, useAddNote, useNoteInfo, useUpdateNoteFields } from "~/lib/hooks/useAnkiConnect";
-import { useDeckNames } from "~/lib/hooks/useAnkiConnect";
+import { useDeckNames, useDeckNamesAndIds } from "~/lib/hooks/useAnkiConnect";
 import {
   Card,
   CardContent,
@@ -41,7 +41,8 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ noteId, defaultDeckName, onSaved }: NoteEditorProps) {
-  const { data: deckNames, isLoading: decksLoading } = useDeckNames();
+  const { data: deckNamesAndIds, isLoading: decksLoading } = useDeckNamesAndIds();
+  const deckNames = deckNamesAndIds ? Object.keys(deckNamesAndIds) : [];
   const { data: modelNames, isLoading: modelsLoading } = useModelNames();
 
   const [selectedDeck, setSelectedDeck] = useState<string>(defaultDeckName || "");

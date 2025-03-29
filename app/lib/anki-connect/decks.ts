@@ -22,12 +22,25 @@ export interface DeckTreeNode {
   total_in_deck?: number;
 }
 
+// 新增的类型：牌组名称及ID的映射对象
+export interface DeckNamesAndIds {
+  [name: string]: number;
+}
+
 /**
  * 获取所有牌组名称
  * @returns 牌组名称数组
  */
 export async function getDeckNames(): Promise<string[]> {
   return await ankiConnectInvoke<string[]>("deckNames");
+}
+
+/**
+ * 获取所有牌组名称及其ID
+ * @returns 牌组名称到ID的映射对象
+ */
+export async function getDeckNamesAndIds(): Promise<DeckNamesAndIds> {
+  return await ankiConnectInvoke<DeckNamesAndIds>("deckNamesAndIds");
 }
 
 /**
