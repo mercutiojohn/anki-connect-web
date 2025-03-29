@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "~/components/ui/card";
-import { Separator } from "~/components/ui/separator";
+import { Card, CardContent as UICardContent, CardFooter, CardHeader } from "~/components/ui/card";
 import { useCardInfo } from "~/lib/hooks/useAnkiConnect";
+import { AnkiCardContent, CardContent } from "./card-content";
 
 interface ReviewCardProps {
   cardId: number;
@@ -45,35 +45,35 @@ export function ReviewCard({ cardId, onAnswer }: ReviewCardProps) {
           {cardInfo.deckName}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <h3 className="text-lg font-medium text-center mb-4">问题</h3>
-          <div
-            className="card-question p-6 bg-muted rounded-md"
-            dangerouslySetInnerHTML={{ __html: cardInfo.question }}
-          />
-        </div>
-
+      <UICardContent className="space-y-6">
         {!showAnswer ? (
-          <div className="text-center">
-            <Button
-              size="lg"
-              onClick={() => setShowAnswer(true)}
-            >
-              显示答案
-            </Button>
-          </div>
+          <>
+            <AnkiCardContent
+              cardInfo={cardInfo}
+              showAnswer={false}
+              showToggleButton={false}
+            />
+            <div className="text-center">
+              <Button
+                size="lg"
+                onClick={() => setShowAnswer(true)}
+              >
+                显示答案
+              </Button>
+            </div>
+          </>
         ) : (
           <>
-            <Separator />
-
-            <div>
-              <h3 className="text-lg font-medium text-center mb-4">答案</h3>
-              <div
-                className="card-answer p-6 bg-muted rounded-md"
-                dangerouslySetInnerHTML={{ __html: cardInfo.answer }}
-              />
-            </div>
+            <AnkiCardContent
+              cardInfo={cardInfo}
+              showAnswer={false}
+              showToggleButton={false}
+            />
+            <AnkiCardContent
+              cardInfo={cardInfo}
+              showAnswer={true}
+              showToggleButton={false}
+            />
 
             <div className="rating-buttons grid grid-cols-4 gap-2 mt-8">
               <Button
@@ -106,7 +106,7 @@ export function ReviewCard({ cardId, onAnswer }: ReviewCardProps) {
             </div>
           </>
         )}
-      </CardContent>
+      </UICardContent>
       <CardFooter className="text-center text-sm text-muted-foreground">
         间隔: {cardInfo.interval} 天 | 复习次数: {cardInfo.reps} | 失败次数: {cardInfo.lapses}
       </CardFooter>

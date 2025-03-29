@@ -12,8 +12,10 @@ import {
   Card, CardContent, CardDescription,
   CardHeader, CardTitle
 } from "~/components/ui/card";
+
 import { Loading } from "~/components/ui/loading";
 import { ErrorDisplay } from "~/components/ui/error-display";
+import { AnkiCardContent } from "./card-content";
 
 interface CardListProps {
   cards: CardInfo[] | undefined;
@@ -185,41 +187,24 @@ export function CardList({
             <DataTable
               columns={columns}
               data={cards}
-              pageSize={10}
+              pageSize={120}
             />
           ) : (
             <CardGrid
               showTitle={false}
               columns={columns}
               data={cards}
-              pageSize={6}
+              pageSize={120}
               onCardClick={handleCardClick} // 添加卡片点击事件
-              // renderTitle={(card) => (
-              //   // <div
-              //   //   className="truncate"
-              //   //   dangerouslySetInnerHTML={{
-              //   //     __html: card.question
-              //   //       .replace(/<[^>]*>/g, '')
-              //   //       .substring(0, 50) + (card.question.length > 50 ? '...' : '')
-              //   //   }}
-              //   // />
-              //   <div
-              //     dangerouslySetInnerHTML={{
-              //       __html: card.question
-              //     }}
-              //   />
-              // )}
+              cardClassName="overflow-hidden"
+              cardContentClassName="p-0 pt-0"
               renderContent={(card) => (
-                <div className="space-y-2">
-                  <div className="mt-2 text-sm">
-                    <div
-                      className="card"
-                      dangerouslySetInnerHTML={{
-                        __html: showAnswers[card.cardId] ? card.answer : card.question
-                      }}
-                    />
-                  </div>
-                </div>
+                <AnkiCardContent
+                  cardInfo={card}
+                  showAnswer={showAnswers[card.cardId] || false}
+                  showToggleButton={false}
+                  className="rounded-none border-none"
+                />
               )}
               renderFooter={(card) => (
                 <div className="flex w-full justify-between items-center">

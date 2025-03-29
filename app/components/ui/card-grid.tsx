@@ -18,6 +18,8 @@ interface CardGridProps<T> {
   renderFooter?: (item: T) => React.ReactNode;
   onCardClick?: (item: T) => void; // 添加卡片点击事件处理函数
   showTitle?: boolean;
+  cardClassName?: string;
+  cardContentClassName?: string;
 }
 
 export function CardGrid<T>({
@@ -29,6 +31,8 @@ export function CardGrid<T>({
   renderFooter,
   onCardClick,
   showTitle = true,
+  cardClassName = "",
+  cardContentClassName = "",
 }: CardGridProps<T>) {
   const [currentPage, setCurrentPage] = useState(0);
   const totalPages = Math.ceil(data.length / pageSize);
@@ -107,7 +111,9 @@ export function CardGrid<T>({
             key={index}
             className={cn(
               `h-full flex flex-col`,
-              `${onCardClick ? 'hover:border-primary/50 transition-colors' : ''}`)}
+              `${onCardClick ? 'hover:border-primary/50 transition-colors' : ''}`,
+              cardClassName
+            )}
           >
             {showTitle &&
               <CardHeader>
@@ -117,7 +123,8 @@ export function CardGrid<T>({
             <CardContent className={cn(
               "flex-grow",
               showTitle ? "" : "pt-6",
-              ` ${onCardClick ? 'cursor-pointer' : ''}`
+              ` ${onCardClick ? 'cursor-pointer' : ''}`,
+              cardContentClassName
             )}
               onClick={onCardClick ? () => onCardClick(item) : undefined}
             >

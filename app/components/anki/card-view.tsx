@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useCardInfo } from "~/lib/hooks/useAnkiConnect";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { Loader2, Eye, EyeOff } from "lucide-react";
-import { Separator } from "~/components/ui/separator";
+import { Card, CardContent as UICardContent, CardFooter, CardHeader, CardTitle } from "~/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { AnkiCardContent } from "./card-content";
 
 interface CardViewProps {
   cardId: number;
@@ -40,55 +39,17 @@ export function CardView({ cardId }: CardViewProps) {
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="card-content">
-          <h3 className="text-lg font-medium mb-2">问题</h3>
-          <div className="card-question p-4 bg-muted rounded-md">
-            <div
-              className="card"
-              dangerouslySetInnerHTML={{ __html: cardInfo.question }}
-            />
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="card-content">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-medium">答案</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAnswer(!showAnswer)}
-            >
-              {showAnswer ? (
-                <>
-                  <EyeOff className="h-4 w-4 mr-1" /> 隐藏
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4 mr-1" /> 显示
-                </>
-              )}
-            </Button>
-          </div>
-
-          {showAnswer ? (
-            <div
-              className="card-answer p-4 bg-muted rounded-md"
-            >
-              <div
-                className="card"
-                dangerouslySetInnerHTML={{ __html: cardInfo.answer }}
-              />
-            </div>
-          ) : (
-            <div className="p-4 bg-muted rounded-md text-center text-muted-foreground">
-              点击显示按钮查看答案
-            </div>
-          )}
-        </div>
-      </CardContent>
+      <UICardContent className="space-y-4">
+        <AnkiCardContent
+          cardInfo={cardInfo}
+          showAnswer={false}
+        />
+        <AnkiCardContent
+          cardInfo={cardInfo}
+          showAnswer={true}
+          showToggleButton={false}
+        />
+      </UICardContent>
       <CardFooter>
         <div className="w-full text-sm text-muted-foreground">
           <p>牌组: {cardInfo.deckName}</p>
