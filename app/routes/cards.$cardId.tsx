@@ -62,6 +62,11 @@ export default function CardDetail() {
             <Button variant="outline" onClick={() => navigate(-1)}>
               <ArrowLeft className="mr-2 h-4 w-4" /> 返回
             </Button>
+            <Button variant="default" asChild>
+              <Link to={`/cards/${cardId}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" /> 编辑
+              </Link>
+            </Button>
           </div>
         </div>
 
