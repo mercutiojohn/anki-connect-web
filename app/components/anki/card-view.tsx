@@ -43,10 +43,12 @@ export function CardView({ cardId }: CardViewProps) {
       <CardContent className="space-y-4">
         <div className="card-content">
           <h3 className="text-lg font-medium mb-2">问题</h3>
-          <div
-            className="card-question p-4 bg-muted rounded-md"
-            dangerouslySetInnerHTML={{ __html: cardInfo.question }}
-          />
+          <div className="card-question p-4 bg-muted rounded-md">
+            <div
+              className="card"
+              dangerouslySetInnerHTML={{ __html: cardInfo.question }}
+            />
+          </div>
         </div>
 
         <Separator />
@@ -74,8 +76,12 @@ export function CardView({ cardId }: CardViewProps) {
           {showAnswer ? (
             <div
               className="card-answer p-4 bg-muted rounded-md"
-              dangerouslySetInnerHTML={{ __html: cardInfo.answer }}
-            />
+            >
+              <div
+                className="card"
+                dangerouslySetInnerHTML={{ __html: cardInfo.answer }}
+              />
+            </div>
           ) : (
             <div className="p-4 bg-muted rounded-md text-center text-muted-foreground">
               点击显示按钮查看答案

@@ -95,7 +95,7 @@ export default function CardDetail() {
                   <div className="font-medium">笔记 ID</div>
                   <div>{card.note}</div>
                 </div>
-                <Button
+                {/* <Button
                   variant="outline"
                   className="w-full justify-start"
                   asChild
@@ -104,7 +104,7 @@ export default function CardDetail() {
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     返回牌组
                   </Link>
-                </Button>
+                </Button> */}
               </CardContent>
             </Card>
           </div>

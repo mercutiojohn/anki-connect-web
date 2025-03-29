@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { RootLayout } from "~/components/layout/root-layout";
-import { ReviewCard } from "~/components/anki/review-card";
+import { ReviewCard } from "~/components/anki/card-review";
 import { Button } from "~/components/ui/button";
 import { useCardsByQuery, useDeckNamesAndIds } from "~/lib/hooks/useAnkiConnect";
 import { ankiConnectInvoke } from "~/lib/anki-connect/api";
@@ -19,6 +19,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 };
 
 export default function ReviewDeck() {
+  console.log("ReviewDeck");
   const { deckId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();

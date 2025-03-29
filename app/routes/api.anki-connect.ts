@@ -16,7 +16,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const { action, version, params, ankiConnectUrl = "http://localhost:8765" } = requestData;
 
     // 记录请求信息，便于调试
-    console.log(`[AnkiConnect] 调用操作: ${action}`, { params });
+    // console.log(`[AnkiConnect] 调用操作: ${action}`, { params });
 
     // 构造发送给 AnkiConnect 的请求
     const ankiRequest: AnkiConnectRequest = {
